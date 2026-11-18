@@ -44,11 +44,18 @@ class ManagerWindow:
     def refresh_list(self):
         self.listbox.delete(0, tk.END)
         for sticker in self.stickers:
-            # 미리보기 텍스트
-            preview_text = sticker['text'][:50].replace('\n', ' ')
-            if len(sticker['text']) > 50:
+            # 타이틀과 미리보기
+            title = sticker.get('title', 'Untitled')
+            preview_text = sticker['text'][:40].replace('\n', ' ')
+            if len(sticker['text']) > 40:
                 preview_text += "..."
-            display_text = f"[{sticker['bg_color']}] {preview_text}"
+
+            # 미리보기가 있으면 표시, 없으면 타이틀만
+            if preview_text.strip():
+                display_text = f"📝 {title}  -  {preview_text}"
+            else:
+                display_text = f"📝 {title}"
+
             self.listbox.insert(tk.END, display_text)
 
     def create_new_sticker(self):

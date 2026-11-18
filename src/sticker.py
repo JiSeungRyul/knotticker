@@ -25,6 +25,24 @@ class StickerWindow:
 
         self.window.protocol("WM_DELETE_WINDOW", self.on_closing)
 
+        # 타이틀 입력창
+        self.title_entry = tk.Entry(
+            self.window,
+            border=0,
+            font=("Segoe UI", 10, "bold"),
+            fg=sticker_data['text_color'],
+            bg=sticker_data['bg_color'],
+            highlightthickness=0
+        )
+        self.title_entry.pack(fill=tk.X, padx=10, pady=(8, 2))
+        self.title_entry.insert(0, sticker_data.get('title', 'Untitled'))
+        self.title_entry.bind("<KeyRelease>", self.on_title_change)
+        self.title_entry.bind("<Return>", lambda e: self.text_widget.focus())
+
+        # 구분선
+        separator = tk.Frame(self.window, height=1, bg=sticker_data['text_color'], highlightthickness=0)
+        separator.pack(fill=tk.X, padx=10, pady=(0, 5))
+
         # 텍스트 에디터
         self.text_widget = tk.Text(
             self.window,
@@ -50,6 +68,7 @@ class StickerWindow:
         self.menu_frame = tk.Frame(self.window, bg="#2C3E50", highlightthickness=0)
         self.menu_visible = False
         self.menu_fade_id = None
+        self.separator = separator
 
         self.create_menu_buttons()
         self.update_text_widget_format()
@@ -154,11 +173,14 @@ class StickerWindow:
     def change_bg_color(self, color):
         self.sticker_data['bg_color'] = color
         self.window.configure(bg=color)
+        self.title_entry.config(bg=color)
         self.text_widget.configure(bg=color)
         self.on_text_change(None)
 
     def change_text_color(self, color):
         self.sticker_data['text_color'] = color
+        self.title_entry.config(fg=color)
+        self.separator.config(bg=color)
         self.update_text_widget_format()
         self.on_text_change(None)
 
@@ -217,6 +239,10 @@ class StickerWindow:
             weight="bold" if self.sticker_data['bold'] else "normal"
         )
         self.text_widget.configure(font=new_font, fg=self.sticker_data['text_color'], bg=self.sticker_data['bg_color'])
+
+    def on_title_change(self, event):
+        self.sticker_data['title'] = self.title_entry.get() or 'Untitled'
+        self.on_text_change(None)
 
     def on_text_change(self, event):
         self.sticker_data['text'] = self.text_widget.get("1.0", tk.END).rstrip('\n')

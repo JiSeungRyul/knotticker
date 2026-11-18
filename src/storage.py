@@ -34,6 +34,7 @@ def save_stickers(stickers):
 def create_sticker(text="", bg_color="#FFFACD", text_color="#2C3E50", font=("Segoe UI", 11)):
     return {
         "id": str(uuid.uuid4()),
+        "title": "Untitled",
         "text": text,
         "bg_color": bg_color,
         "text_color": text_color,

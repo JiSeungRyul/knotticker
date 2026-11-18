@@ -1,0 +1,36 @@
+[
+  {
+    "id": "2e39210b-a8ff-49db-81f8-b9ce0490f111",
+    "text": "sdfasdfasdf",
+    "bg_color": "#E91E63",
+    "text_color": "#000000",
+    "font_family": "Arial",
+    "font_size": 12,
+    "bold": false,
+    "italic": false,
+    "underline": false,
+    "created_at": "2026-11-18T16:40:34.150744",
+    "updated_at": "2026-11-18T16:40:34.150744",
+    "x": 100,
+    "y": 100,
+    "width": 300,
+    "height": 250
+  },
+  {
+    "id": "ae41a456-59d4-4748-96fc-3f366433404d",
+    "text": "",
+    "bg_color": "#FFEB3B",
+    "text_color": "#000000",
+    "font_family": "Arial",
+    "font_size": 12,
+    "bold": false,
+    "italic": false,
+    "underline": false,
+    "created_at": "2026-11-18T16:40:36.275702",
+    "updated_at": "2026-11-18T16:40:36.275702",
+    "x": 464,
+    "y": 111,
+    "width": 300,
+    "height": 250
+  }
+]

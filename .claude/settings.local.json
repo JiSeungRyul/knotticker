@@ -13,7 +13,8 @@
       "Bash(git commit -m 'Remove titlebar for clean minimal design *)",
       "Bash(git commit -m 'Add title field for stickers *)",
       "Bash(git commit -m 'Improve UI: Modern list design and menu dragging *)",
-      "Bash(git commit -m 'Fix menu interaction and add rounded edge styling *)"
+      "Bash(git commit -m 'Fix menu interaction and add rounded edge styling *)",
+      "Bash(git commit -m 'Simplify list view: Show title only *)"
     ]
   }
 }

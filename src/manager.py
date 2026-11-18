@@ -71,27 +71,10 @@ class ManagerWindow:
     def refresh_list(self):
         self.listbox.delete(0, tk.END)
         for idx, sticker in enumerate(self.stickers):
-            # 타이틀과 미리보기
+            # 타이틀만 표시
             title = sticker.get('title', 'Untitled')
-            preview_text = sticker['text'][:35].replace('\n', ' ').strip()
-            if len(sticker['text']) > 35:
-                preview_text += "..."
-
-            # 미리보기가 있으면 표시, 없으면 타이틀만
-            if preview_text:
-                display_text = f"{title}\n{preview_text}"
-            else:
-                display_text = title
-
-            self.listbox.insert(tk.END, display_text)
-
-            # 색상 태그 추가 (각 항목마다 고유한 태그)
-            tag_name = f"bg_color_{idx}"
-            bg_color = sticker.get('bg_color', '#FFFACD')
+            self.listbox.insert(tk.END, title)
             self.listbox.itemconfig(idx, {'bg': '#f8f9fa', 'selectbackground': '#d5dbeb'})
-
-            # 색상 블록을 위한 커스텀 렌더링은 텍스트 앞에 색상 표시
-            # (tkinter 리스트박스 제한으로 별도 처리)
 
     def on_listbox_hover(self, event):
         idx = self.listbox.nearest(event.y)

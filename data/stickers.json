@@ -35,7 +35,7 @@
   },
   {
     "id": "cf50f969-8ad5-4051-a8ba-de0eb61c3b32",
-    "text": "sdfasdfasd\nsdfslk지승 률 \n안녕하세요. ㅋㅋㅋㅋ",
+    "text": "ㄴㅋㅋㅋㅋ",
     "bg_color": "#FFFACD",
     "text_color": "#2C3E50",
     "font_family": "Segoe UI",
@@ -50,6 +50,7 @@
     "x": 558,
     "y": 101,
     "width": 320,
-    "height": 280
+    "height": 280,
+    "title": "접속 정보"
   }
 ]

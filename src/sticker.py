@@ -13,11 +13,15 @@ class StickerWindow:
         self.window = tk.Toplevel(parent)
         self.window.title("")
         self.window.geometry(f"{sticker_data['width']}x{sticker_data['height']}+{sticker_data['x']}+{sticker_data['y']}")
-        self.window.configure(bg=sticker_data['bg_color'], highlightthickness=0)
+        self.window.configure(bg="#f5f5f5", highlightthickness=0)
         self.window.overrideredirect(True)  # 타이틀 바 제거
 
         # 드래그 위치 추적
         self.drag_data = {"x": 0, "y": 0}
+
+        # 메인 콘텐츠 프레임 (라운드된 느낌)
+        self.main_frame = tk.Frame(self.window, bg=sticker_data['bg_color'], highlightthickness=0)
+        self.main_frame.pack(fill=tk.BOTH, expand=True, padx=2, pady=2)
 
         # Always on top 옵션
         if sticker_data.get('always_on_top', False):
@@ -27,7 +31,7 @@ class StickerWindow:
 
         # 타이틀 입력창
         self.title_entry = tk.Entry(
-            self.window,
+            self.main_frame,
             border=0,
             font=("Segoe UI", 10, "bold"),
             fg=sticker_data['text_color'],
@@ -38,14 +42,18 @@ class StickerWindow:
         self.title_entry.insert(0, sticker_data.get('title', 'Untitled'))
         self.title_entry.bind("<KeyRelease>", self.on_title_change)
         self.title_entry.bind("<Return>", lambda e: self.text_widget.focus())
+        self.title_entry.bind("<Motion>", self.on_mouse_move)
+        self.title_entry.bind("<Leave>", self.on_mouse_leave)
 
         # 구분선
-        separator = tk.Frame(self.window, height=1, bg=sticker_data['text_color'], highlightthickness=0)
+        separator = tk.Frame(self.main_frame, height=1, bg=sticker_data['text_color'], highlightthickness=0)
         separator.pack(fill=tk.X, padx=10, pady=(0, 5))
+        separator.bind("<Motion>", self.on_mouse_move)
+        separator.bind("<Leave>", self.on_mouse_leave)
 
         # 텍스트 에디터
         self.text_widget = tk.Text(
-            self.window,
+            self.main_frame,
             wrap=tk.WORD,
             padx=10,
             pady=10,
@@ -65,10 +73,12 @@ class StickerWindow:
         self.text_widget.tag_configure("strikethrough", overstrike=True)
 
         # 호버 메뉴
-        self.menu_frame = tk.Frame(self.window, bg="#2C3E50", highlightthickness=0)
+        self.menu_frame = tk.Frame(self.main_frame, bg="#2C3E50", highlightthickness=0)
         self.menu_visible = False
         self.menu_fade_id = None
         self.separator = separator
+        self.main_frame.bind("<Motion>", self.on_mouse_move)
+        self.main_frame.bind("<Leave>", self.on_mouse_leave)
 
         self.create_menu_buttons()
         self.update_text_widget_format()
@@ -176,7 +186,7 @@ class StickerWindow:
 
     def change_bg_color(self, color):
         self.sticker_data['bg_color'] = color
-        self.window.configure(bg=color)
+        self.main_frame.configure(bg=color)
         self.title_entry.config(bg=color)
         self.text_widget.configure(bg=color)
         self.on_text_change(None)

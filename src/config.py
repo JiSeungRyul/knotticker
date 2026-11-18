@@ -1,38 +1,39 @@
 # Configuration for Knotticker
 
-# 색상 팔레트
+# 파스텔톤 색상 팔레트
 STICKER_COLORS = [
-    "#FFEB3B",  # 노랑
-    "#F44336",  # 빨강
-    "#2196F3",  # 파랑
-    "#4CAF50",  # 초록
-    "#9C27B0",  # 보라
-    "#FF9800",  # 주황
-    "#00BCD4",  # 청록
-    "#E91E63",  # 핑크
+    "#FFFACD",  # 파스텔 노랑
+    "#FFD1DC",  # 파스텔 분홍
+    "#ADD8E6",  # 파스텔 파랑
+    "#B0E0E6",  # 파스텔 청록
+    "#98D98E",  # 파스텔 초록
+    "#DDA0DD",  # 파스텔 보라
+    "#FFDAB9",  # 파스텔 복숭아
+    "#F0E68C",  # 파스텔 카키
 ]
 
 # 글자 색상
 TEXT_COLORS = [
-    "#000000",  # 검정
-    "#FFFFFF",  # 흰색
-    "#666666",  # 회색
-    "#FF0000",  # 빨강
-    "#0000FF",  # 파랑
+    "#2C3E50",  # 짙은 회색
+    "#34495E",  # 차분한 회색
+    "#7F8C8D",  # 중간 회색
+    "#C0392B",  # 진한 빨강
+    "#2980B9",  # 진한 파랑
 ]
 
 # 폰트
 FONTS = [
-    ("Arial", 10),
-    ("Arial", 12),
-    ("Arial", 14),
+    ("Segoe UI", 10),
+    ("Segoe UI", 11),
+    ("Segoe UI", 12),
+    ("Segoe UI", 13),
+    ("Arial", 11),
     ("Courier New", 10),
-    ("Courier New", 12),
-    ("Times New Roman", 10),
-    ("Times New Roman", 12),
+    ("Times New Roman", 11),
 ]
 
 # UI 설정
-STICKER_WIDTH = 300
-STICKER_HEIGHT = 250
-STICKER_PADDING = 10
+STICKER_WIDTH = 320
+STICKER_HEIGHT = 280
+STICKER_PADDING = 8
+MENU_FADE_TIME = 300  # 메뉴 페이드 타임 (ms)

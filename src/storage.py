@@ -31,7 +31,7 @@ def save_stickers(stickers):
         print(f"Error saving stickers: {e}")
         return False
 
-def create_sticker(text="", bg_color="#FFEB3B", text_color="#000000", font=("Arial", 12)):
+def create_sticker(text="", bg_color="#FFFACD", text_color="#2C3E50", font=("Segoe UI", 11)):
     return {
         "id": str(uuid.uuid4()),
         "text": text,
@@ -42,12 +42,14 @@ def create_sticker(text="", bg_color="#FFEB3B", text_color="#000000", font=("Ari
         "bold": False,
         "italic": False,
         "underline": False,
+        "strikethrough": False,
+        "always_on_top": False,
         "created_at": datetime.now().isoformat(),
         "updated_at": datetime.now().isoformat(),
         "x": 100,
         "y": 100,
-        "width": 300,
-        "height": 250,
+        "width": 320,
+        "height": 280,
     }
 
 def update_sticker(stickers, sticker_id, **kwargs):

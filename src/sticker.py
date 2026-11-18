@@ -75,6 +75,10 @@ class StickerWindow:
         self.auto_save_id = None
 
     def create_menu_buttons(self):
+        # 메뉴에 드래그 이벤트 바인딩
+        self.menu_frame.bind("<Button-1>", self.on_text_press)
+        self.menu_frame.bind("<B1-Motion>", self.on_text_drag)
+
         # 행 1: 배경색
         color_frame = tk.Frame(self.menu_frame, bg="#2C3E50")
         color_frame.pack(fill=tk.X, padx=5, pady=3)

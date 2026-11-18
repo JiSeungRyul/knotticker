@@ -19,44 +19,84 @@ class ManagerWindow:
         self.setup_autosave()
 
     def create_ui(self):
+        self.root.configure(bg="#f8f9fa")
+
         # 상단: 버튼 패널
-        btn_frame = tk.Frame(self.root)
-        btn_frame.pack(fill=tk.X, padx=10, pady=10)
+        btn_frame = tk.Frame(self.root, bg="#f8f9fa")
+        btn_frame.pack(fill=tk.X, padx=15, pady=15)
 
-        tk.Button(btn_frame, text="+ New Sticker", command=self.create_new_sticker).pack(side=tk.LEFT, padx=5)
-        tk.Button(btn_frame, text="Delete Selected", command=self.delete_selected).pack(side=tk.LEFT, padx=5)
-        tk.Button(btn_frame, text="Open Selected", command=self.open_selected).pack(side=tk.LEFT, padx=5)
+        tk.Label(btn_frame, text="Knotticker", font=("Segoe UI", 16, "bold"), bg="#f8f9fa", fg="#2C3E50").pack(side=tk.LEFT)
 
-        # 중간: 리스트 뷰
-        list_frame = tk.Frame(self.root)
-        list_frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
+        btn_style = {"font": ("Segoe UI", 10), "bg": "#3498db", "fg": "white", "border": 0, "padx": 12, "pady": 6, "relief": tk.FLAT}
+        tk.Button(btn_frame, text="+ New", command=self.create_new_sticker, **btn_style).pack(side=tk.RIGHT, padx=5)
+        tk.Button(btn_frame, text="Delete", command=self.delete_selected, bg="#e74c3c", **{k: v for k, v in btn_style.items() if k != "bg"}).pack(side=tk.RIGHT, padx=5)
+        tk.Button(btn_frame, text="Open", command=self.open_selected, **btn_style).pack(side=tk.RIGHT, padx=5)
+
+        # 중간: 리스트 뷰 프레임
+        list_frame = tk.Frame(self.root, bg="#f8f9fa")
+        list_frame.pack(fill=tk.BOTH, expand=True, padx=15, pady=(0, 15))
 
         # 스크롤바
         scrollbar = ttk.Scrollbar(list_frame)
         scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
 
-        self.listbox = tk.Listbox(list_frame, yscrollcommand=scrollbar.set, selectmode=tk.EXTENDED)
+        # 커스텀 스타일 설정
+        style = ttk.Style()
+        style.theme_use('clam')
+        style.configure('TScrollbar', background='#ecf0f1', troughcolor='#f8f9fa')
+
+        self.listbox = tk.Listbox(
+            list_frame,
+            yscrollcommand=scrollbar.set,
+            selectmode=tk.EXTENDED,
+            font=("Segoe UI", 11),
+            bg="white",
+            fg="#2C3E50",
+            border=1,
+            highlightthickness=1,
+            highlightcolor="#3498db",
+            highlightbackground="#ecf0f1",
+            activestyle='none',
+            height=15
+        )
         self.listbox.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
         scrollbar.config(command=self.listbox.yview)
 
+        # 호버 효과
+        self.listbox.bind("<Motion>", self.on_listbox_hover)
+        self.listbox.bind("<Leave>", lambda e: self.listbox.config(bg="white"))
         self.listbox.bind("<Double-Button-1>", lambda e: self.open_selected())
+        self.listbox.bind("<Return>", lambda e: self.open_selected())
 
     def refresh_list(self):
         self.listbox.delete(0, tk.END)
-        for sticker in self.stickers:
+        for idx, sticker in enumerate(self.stickers):
             # 타이틀과 미리보기
             title = sticker.get('title', 'Untitled')
-            preview_text = sticker['text'][:40].replace('\n', ' ')
-            if len(sticker['text']) > 40:
+            preview_text = sticker['text'][:35].replace('\n', ' ').strip()
+            if len(sticker['text']) > 35:
                 preview_text += "..."
 
             # 미리보기가 있으면 표시, 없으면 타이틀만
-            if preview_text.strip():
-                display_text = f"📝 {title}  -  {preview_text}"
+            if preview_text:
+                display_text = f"{title}\n{preview_text}"
             else:
-                display_text = f"📝 {title}"
+                display_text = title
 
             self.listbox.insert(tk.END, display_text)
+
+            # 색상 태그 추가 (각 항목마다 고유한 태그)
+            tag_name = f"bg_color_{idx}"
+            bg_color = sticker.get('bg_color', '#FFFACD')
+            self.listbox.itemconfig(idx, {'bg': '#f8f9fa', 'selectbackground': '#d5dbeb'})
+
+            # 색상 블록을 위한 커스텀 렌더링은 텍스트 앞에 색상 표시
+            # (tkinter 리스트박스 제한으로 별도 처리)
+
+    def on_listbox_hover(self, event):
+        idx = self.listbox.nearest(event.y)
+        if idx >= 0:
+            self.listbox.itemconfig(idx, {'bg': '#ecf0f1'})
 
     def create_new_sticker(self):
         new_sticker = create_sticker()

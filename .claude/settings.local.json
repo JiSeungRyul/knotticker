@@ -11,7 +11,8 @@
       "WebFetch(domain:www.makeuseof.com)",
       "WebFetch(domain:en.wikipedia.org)",
       "Bash(git commit -m 'Remove titlebar for clean minimal design *)",
-      "Bash(git commit -m 'Add title field for stickers *)"
+      "Bash(git commit -m 'Add title field for stickers *)",
+      "Bash(git commit -m 'Improve UI: Modern list design and menu dragging *)"
     ]
   }
 }

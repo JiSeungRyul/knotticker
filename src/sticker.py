@@ -14,6 +14,10 @@ class StickerWindow:
         self.window.title("")
         self.window.geometry(f"{sticker_data['width']}x{sticker_data['height']}+{sticker_data['x']}+{sticker_data['y']}")
         self.window.configure(bg=sticker_data['bg_color'], highlightthickness=0)
+        self.window.overrideredirect(True)  # 타이틀 바 제거
+
+        # 드래그 위치 추적
+        self.drag_data = {"x": 0, "y": 0}
 
         # Always on top 옵션
         if sticker_data.get('always_on_top', False):
@@ -36,6 +40,8 @@ class StickerWindow:
         self.text_widget.bind("<Motion>", self.on_mouse_move)
         self.text_widget.bind("<Leave>", self.on_mouse_leave)
         self.text_widget.bind("<Button-3>", self.show_context_menu)
+        self.text_widget.bind("<Button-1>", self.on_text_press)
+        self.text_widget.bind("<B1-Motion>", self.on_text_drag)
 
         # 텍스트 태그 설정
         self.text_widget.tag_configure("strikethrough", overstrike=True)
@@ -222,6 +228,19 @@ class StickerWindow:
     def save_to_file(self):
         self.on_update_callback(self.sticker_data)
         self.auto_save_id = None
+
+    def on_text_press(self, event):
+        # Ctrl 누르고 클릭하면 드래그 시작
+        if event.state & 0x4:  # Ctrl 키 체크
+            self.drag_data["x"] = event.x_root - self.window.winfo_x()
+            self.drag_data["y"] = event.y_root - self.window.winfo_y()
+
+    def on_text_drag(self, event):
+        # Ctrl 누르고 드래그하면 창 이동
+        if event.state & 0x4:  # Ctrl 키 체크
+            x = event.x_root - self.drag_data["x"]
+            y = event.y_root - self.drag_data["y"]
+            self.window.geometry(f"+{x}+{y}")
 
     def show_context_menu(self, event):
         menu = tk.Menu(self.window, tearoff=0)

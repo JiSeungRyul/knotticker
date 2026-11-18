@@ -11,8 +11,8 @@
     "underline": false,
     "created_at": "2026-11-18T16:40:34.150744",
     "updated_at": "2026-11-18T16:40:34.150744",
-    "x": 100,
-    "y": 100,
+    "x": 807,
+    "y": 143,
     "width": 300,
     "height": 250
   },
@@ -32,5 +32,24 @@
     "y": 111,
     "width": 300,
     "height": 250
+  },
+  {
+    "id": "cf50f969-8ad5-4051-a8ba-de0eb61c3b32",
+    "text": "sdfasdfasd\nsdfslk지승 률 \n안녕하세요. ㅋㅋㅋㅋ",
+    "bg_color": "#FFFACD",
+    "text_color": "#2C3E50",
+    "font_family": "Segoe UI",
+    "font_size": 11,
+    "bold": false,
+    "italic": false,
+    "underline": false,
+    "strikethrough": false,
+    "always_on_top": false,
+    "created_at": "2026-11-18T17:23:57.253898",
+    "updated_at": "2026-11-18T17:23:57.253898",
+    "x": 558,
+    "y": 101,
+    "width": 320,
+    "height": 280
   }
 ]

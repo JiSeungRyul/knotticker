@@ -31,6 +31,7 @@ class ManagerWindow:
         tk.Button(btn_frame, text="+ New", command=self.create_new_sticker, **btn_style).pack(side=tk.RIGHT, padx=5)
         tk.Button(btn_frame, text="Delete", command=self.delete_selected, bg="#e74c3c", **{k: v for k, v in btn_style.items() if k != "bg"}).pack(side=tk.RIGHT, padx=5)
         tk.Button(btn_frame, text="Open", command=self.open_selected, **btn_style).pack(side=tk.RIGHT, padx=5)
+        tk.Button(btn_frame, text="Exit", command=self.quit_app, bg="#7f8c8d", **{k: v for k, v in btn_style.items() if k != "bg"}).pack(side=tk.RIGHT, padx=5)
 
         # 중간: 리스트 뷰 프레임
         list_frame = tk.Frame(self.root, bg="#f8f9fa")
@@ -106,13 +107,15 @@ class ManagerWindow:
     def open_sticker(self, sticker_data):
         sticker_id = sticker_data['id']
         if sticker_id in self.open_windows:
-            self.open_windows[sticker_id].window.lift()
+            self.open_windows[sticker_id].restore()
         else:
             window = StickerWindow(
                 self.root,
                 sticker_data,
                 on_update_callback=self.on_sticker_update,
-                on_close_callback=self.on_sticker_close
+                on_close_callback=self.on_sticker_close,
+                on_new_callback=self.create_new_sticker,
+                on_list_callback=self.show_list
             )
             self.open_windows[sticker_id] = window
 
@@ -145,9 +148,15 @@ class ManagerWindow:
 
         self.root.after(5000, autosave)
 
+    def show_list(self):
+        self.root.deiconify()
+        self.root.lift()
+
     def on_closing(self):
-        # 모든 열린 스티커 창 닫기
+        self.root.withdraw()
+
+    def quit_app(self):
         for window in list(self.open_windows.values()):
-            window.window.destroy()
+            window.on_closing()
         save_stickers(self.stickers)
         self.root.destroy()

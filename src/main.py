@@ -13,5 +13,6 @@ if __name__ == "__main__":
     ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(APP_ID)
     root = tk.Tk()
     app = ManagerWindow(root)
+    app.restore_open_stickers()
     root.protocol("WM_DELETE_WINDOW", app.on_closing)
     root.mainloop()

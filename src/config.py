@@ -1,4 +1,12 @@
 # Configuration for Knotticker
+import sys
+from pathlib import Path
+
+if getattr(sys, "frozen", False):
+    ASSET_DIR = Path(sys._MEIPASS) / "assets"
+else:
+    ASSET_DIR = Path(__file__).parent / "assets"
+ICON_PATH = str(ASSET_DIR / "icon.ico")
 
 # 파스텔톤 색상 팔레트
 STICKER_COLORS = [

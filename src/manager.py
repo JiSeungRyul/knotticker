@@ -2,21 +2,29 @@ import tkinter as tk
 from tkinter import ttk
 from storage import load_stickers, save_stickers, create_sticker, delete_sticker
 from sticker import StickerWindow
-from config import STICKER_COLORS
+from config import STICKER_COLORS, ICON_PATH
 
 class ManagerWindow:
     def __init__(self, root):
         self.root = root
         self.root.title("Knotticker - Sticker Manager")
         self.root.geometry("600x400")
-        self.root.iconbitmap(default='')  # 아이콘 설정 안 함
+        self.root.iconbitmap(ICON_PATH)
 
         self.stickers = load_stickers()
         self.open_windows = {}
+        self.quitting = False
 
         self.create_ui()
         self.refresh_list()
         self.setup_autosave()
+
+    def restore_open_stickers(self):
+        restored = [s for s in self.stickers if s.get('open')]
+        for sticker in restored:
+            self.open_sticker(sticker)
+        if restored:
+            self.root.withdraw()
 
     def create_ui(self):
         self.root.configure(bg="#f8f9fa")
@@ -94,7 +102,7 @@ class ManagerWindow:
         for idx in reversed(selected):
             sticker_id = self.stickers[idx]['id']
             if sticker_id in self.open_windows:
-                self.open_windows[sticker_id].window.destroy()
+                self.open_windows.pop(sticker_id).window.destroy()
             self.stickers = delete_sticker(self.stickers, sticker_id)
         save_stickers(self.stickers)
         self.refresh_list()
@@ -109,6 +117,8 @@ class ManagerWindow:
         if sticker_id in self.open_windows:
             self.open_windows[sticker_id].restore()
         else:
+            sticker_data['open'] = True
+            save_stickers(self.stickers)
             window = StickerWindow(
                 self.root,
                 sticker_data,
@@ -129,8 +139,14 @@ class ManagerWindow:
         self.refresh_list()
 
     def on_sticker_close(self, sticker_id):
-        if sticker_id in self.open_windows:
-            del self.open_windows[sticker_id]
+        self.open_windows.pop(sticker_id, None)
+        if self.quitting:
+            return
+        for sticker in self.stickers:
+            if sticker['id'] == sticker_id:
+                sticker['open'] = False
+                save_stickers(self.stickers)
+                break
 
     def setup_autosave(self):
         # 주기적으로 모든 열린 스티커 저장
@@ -156,6 +172,7 @@ class ManagerWindow:
         self.root.withdraw()
 
     def quit_app(self):
+        self.quitting = True
         for window in list(self.open_windows.values()):
             window.on_closing()
         save_stickers(self.stickers)

@@ -1,7 +1,7 @@
 import ctypes
 import tkinter as tk
 from tkinter import font
-from config import STICKER_COLORS, TEXT_COLORS, FONTS
+from config import STICKER_COLORS, TEXT_COLORS, FONTS, ICON_PATH
 
 BAR_H = 26
 POLL_MS = 120
@@ -59,6 +59,7 @@ class StickerWindow:
         )
         self.window.attributes('-topmost', sticker_data.get('always_on_top', False))
         self.window.title(sticker_data.get('title', 'Untitled'))
+        self.window.iconbitmap(ICON_PATH)
         self.window.protocol("WM_DELETE_WINDOW", self.on_closing)
 
         self.container = tk.Frame(self.window, highlightthickness=0)

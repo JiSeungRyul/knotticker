@@ -1,10 +1,14 @@
 import json
 import os
+import sys
 from pathlib import Path
 from datetime import datetime
 import uuid
 
-DATA_DIR = Path(__file__).parent.parent / "data"
+if getattr(sys, "frozen", False):
+    DATA_DIR = Path(sys.executable).parent / "data"
+else:
+    DATA_DIR = Path(__file__).parent.parent / "data"
 DATA_FILE = DATA_DIR / "stickers.json"
 
 def ensure_data_dir():

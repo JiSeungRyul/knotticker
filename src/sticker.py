@@ -54,12 +54,13 @@ def shade(hex_color, amount):
 
 class StickerWindow:
     def __init__(self, parent, sticker_data, on_update_callback, on_close_callback,
-                 on_new_callback, on_list_callback):
+                 on_new_callback, on_list_callback, on_delete_callback):
         self.sticker_data = sticker_data
         self.on_update_callback = on_update_callback
         self.on_close_callback = on_close_callback
         self.on_new_callback = on_new_callback
         self.on_list_callback = on_list_callback
+        self.on_delete_callback = on_delete_callback
         self.auto_save_id = None
         self.bars_shown = False
         self.drag_offset = (0, 0)
@@ -528,6 +529,8 @@ class StickerWindow:
         menu.add_separator()
         pinned = tk.BooleanVar(value=self.sticker_data.get('always_on_top', False))
         menu.add_checkbutton(label="Always on top", variable=pinned, command=self.toggle_always_on_top)
+        menu.add_separator()
+        menu.add_command(label="노트 삭제", command=lambda: self.on_delete_callback(self.sticker_data['id']))
         try:
             menu.tk_popup(event.x_root, event.y_root)
         finally:

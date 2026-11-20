@@ -1,7 +1,9 @@
+import queue
 import tkinter as tk
 from tkinter import ttk
 from storage import load_stickers, save_stickers, create_sticker, delete_sticker
 from sticker import StickerWindow
+from tray import Tray
 from config import STICKER_COLORS, ICON_PATH
 
 class ManagerWindow:
@@ -14,10 +16,37 @@ class ManagerWindow:
         self.stickers = load_stickers()
         self.open_windows = {}
         self.quitting = False
+        self.commands = queue.Queue()
 
         self.create_ui()
         self.refresh_list()
         self.setup_autosave()
+        self.tray = Tray(self.commands)
+        self.tray.start()
+        self.root.after(150, self.process_commands)
+
+    def process_commands(self):
+        while True:
+            try:
+                command = self.commands.get_nowait()
+            except queue.Empty:
+                break
+            self.handle_command(command)
+        self.root.after(150, self.process_commands)
+
+    def handle_command(self, command):
+        if command == "list":
+            self.show_list()
+        elif command == "new":
+            self.create_new_sticker()
+        elif command == "show_all":
+            for window in list(self.open_windows.values()):
+                window.show()
+        elif command == "hide_all":
+            for window in list(self.open_windows.values()):
+                window.hide()
+        elif command == "quit":
+            self.quit_app()
 
     def restore_open_stickers(self):
         restored = [s for s in self.stickers if s.get('open')]
@@ -173,6 +202,7 @@ class ManagerWindow:
 
     def quit_app(self):
         self.quitting = True
+        self.tray.stop()
         for window in list(self.open_windows.values()):
             window.on_closing()
         save_stickers(self.stickers)

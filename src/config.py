@@ -20,25 +20,20 @@ STICKER_COLORS = [
     "#F0E68C",  # 파스텔 카키
 ]
 
-# 글자 색상
+# 글자 색상 (검 빨 파 노 초 보 회)
 TEXT_COLORS = [
-    "#2C3E50",  # 짙은 회색
-    "#34495E",  # 차분한 회색
-    "#7F8C8D",  # 중간 회색
-    "#C0392B",  # 진한 빨강
-    "#2980B9",  # 진한 파랑
+    "#1F1F1F",  # 검
+    "#D32F2F",  # 빨
+    "#1565C0",  # 파
+    "#B7950B",  # 노
+    "#2E7D32",  # 초
+    "#6A1B9A",  # 보
+    "#7F8C8D",  # 회
 ]
 
 # 폰트
-FONTS = [
-    ("Segoe UI", 10),
-    ("Segoe UI", 11),
-    ("Segoe UI", 12),
-    ("Segoe UI", 13),
-    ("Arial", 11),
-    ("Courier New", 10),
-    ("Times New Roman", 11),
-]
+FONT_FAMILIES = ["Segoe UI", "Arial", "Courier New", "Times New Roman"]
+FONT_SIZES = [9, 10, 11, 12, 13, 14, 16, 18]
 
 # UI 설정
 STICKER_WIDTH = 320

@@ -6,7 +6,7 @@ from datetime import datetime
 import uuid
 
 if getattr(sys, "frozen", False):
-    DATA_DIR = Path(sys.executable).parent / "data"
+    DATA_DIR = Path(os.environ["APPDATA"]) / "Knotticker"
 else:
     DATA_DIR = Path(__file__).parent.parent / "data"
 DATA_FILE = DATA_DIR / "stickers.json"

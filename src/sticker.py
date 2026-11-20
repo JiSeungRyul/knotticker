@@ -1,7 +1,7 @@
 import ctypes
 import tkinter as tk
 from tkinter import font
-from config import STICKER_COLORS, TEXT_COLORS, FONTS, ICON_PATH
+from config import STICKER_COLORS, TEXT_COLORS, FONT_FAMILIES, FONT_SIZES, ICON_PATH
 
 BAR_H = 26
 POLL_MS = 120
@@ -14,17 +14,34 @@ FMT_TAGS = {
     (False, True): "fmt_i",
     (True, True): "fmt_bi",
 }
+BULLET = "• "
+TAB_PX = "20"
+SWATCH_PX = 14
 
 GWL_EXSTYLE = -20
 WS_EX_TOOLWINDOW = 0x00000080
 WS_EX_APPWINDOW = 0x00040000
 SW_MINIMIZE = 6
 SW_RESTORE = 9
+CORNER_RADIUS = 10
+LR_LOADFROMFILE = 0x00000010
+IMAGE_ICON = 1
+WM_SETICON = 0x0080
+ICON_SMALL = 0
+ICON_BIG = 1
 user32 = ctypes.windll.user32
+gdi32 = ctypes.windll.gdi32
 
 
 def native_handle(window):
     return user32.GetParent(window.winfo_id())
+
+
+def make_swatch(parent, color, command, size=SWATCH_PX):
+    swatch = tk.Frame(parent, width=size, height=size, bg=color, cursor="hand2", highlightthickness=0)
+    swatch.pack_propagate(False)
+    swatch.bind("<Button-1>", lambda e: command())
+    return swatch
 
 
 def shade(hex_color, amount):
@@ -45,12 +62,10 @@ class StickerWindow:
         self.on_list_callback = on_list_callback
         self.auto_save_id = None
         self.bars_shown = False
-        self.panel_shown = False
         self.drag_offset = (0, 0)
         self.resize_origin = None
         self.bar_frames = []
         self.bar_buttons = []
-        self.panel_labels = []
 
         self.window = tk.Toplevel(parent)
         self.window.overrideredirect(True)
@@ -83,10 +98,11 @@ class StickerWindow:
 
         self.text_widget = tk.Text(self.container, wrap=tk.WORD, padx=12, pady=6,
                                    border=0, highlightthickness=0, undo=True,
-                                   yscrollcommand=self.on_yscroll)
+                                   tabs=(TAB_PX,), yscrollcommand=self.on_yscroll)
         self.text_widget.pack(fill=tk.BOTH, expand=True, pady=(0, BAR_H))
         self.text_widget.insert("1.0", sticker_data['text'])
         self.text_widget.bind("<KeyRelease>", self.on_text_change)
+        self.text_widget.bind("<Return>", self.on_return)
         self.text_widget.bind("<Button-3>", self.show_context_menu)
         self.text_widget.tag_configure("underline", underline=True)
         self.text_widget.tag_configure("strike", overstrike=True)
@@ -94,11 +110,12 @@ class StickerWindow:
 
         self.build_top_bar()
         self.build_bottom_bar()
-        self.build_panel()
+        self.build_bg_palette()
 
         self.apply_colors()
         self.apply_format()
         self.show_in_taskbar()
+        self.apply_round_corners()
         self.window.after(POLL_MS, self.poll_hover)
 
     def show_in_taskbar(self):
@@ -108,6 +125,22 @@ class StickerWindow:
         user32.SetWindowLongW(hwnd, GWL_EXSTYLE, (style & ~WS_EX_TOOLWINDOW) | WS_EX_APPWINDOW)
         self.window.withdraw()
         self.window.deiconify()
+        self.set_taskbar_icon()
+
+    def set_taskbar_icon(self):
+        hwnd = native_handle(self.window)
+        for size_flag, target in ((ICON_SMALL, 16), (ICON_BIG, 32)):
+            hicon = user32.LoadImageW(None, ICON_PATH, IMAGE_ICON, target, target, LR_LOADFROMFILE)
+            if hicon:
+                user32.SendMessageW(hwnd, WM_SETICON, size_flag, hicon)
+
+    def apply_round_corners(self, w=None, h=None):
+        w = w or self.window.winfo_width()
+        h = h or self.window.winfo_height()
+        if w <= 1 or h <= 1:
+            return
+        region = gdi32.CreateRoundRectRgn(0, 0, w + 1, h + 1, CORNER_RADIUS * 2, CORNER_RADIUS * 2)
+        user32.SetWindowRgn(native_handle(self.window), region, True)
 
     def minimize(self):
         user32.ShowWindow(native_handle(self.window), SW_MINIMIZE)
@@ -116,9 +149,17 @@ class StickerWindow:
         user32.ShowWindow(native_handle(self.window), SW_RESTORE)
         self.window.lift()
 
+    def hide(self):
+        self.hide_bars()
+        self.window.withdraw()
+
+    def show(self):
+        self.window.deiconify()
+        self.restore()
+
     def bar_button(self, parent, text, command, font_spec=BTN_FONT):
         btn = tk.Button(parent, text=text, command=command, font=font_spec, relief=tk.FLAT, bd=0,
-                        padx=7, pady=0, cursor="hand2", highlightthickness=0)
+                        padx=6, pady=0, cursor="hand2", highlightthickness=0)
         self.bar_buttons.append(btn)
         return btn
 
@@ -135,7 +176,9 @@ class StickerWindow:
         self.bar_button(self.top_bar, "+", self.on_new_callback, ("Segoe UI", 11)).pack(side=tk.LEFT)
         self.bar_button(self.top_bar, "x", self.on_closing, ("Segoe UI", 10)).pack(side=tk.RIGHT)
         self.bar_button(self.top_bar, "-", self.minimize, ("Segoe UI", 10, "bold")).pack(side=tk.RIGHT)
-        self.bar_button(self.top_bar, "...", self.open_more_menu, ("Segoe UI", 10, "bold")).pack(side=tk.RIGHT)
+        self.bar_button(self.top_bar, "≡", self.on_list_callback, ("Segoe UI", 10, "bold")).pack(side=tk.RIGHT)
+        self.bg_btn = make_swatch(self.top_bar, self.sticker_data['bg_color'], self.toggle_bg_palette)
+        self.bg_btn.pack(side=tk.RIGHT, padx=(0, 4), pady=6)
 
     def build_bottom_bar(self):
         self.bottom_bar = self.make_bar()
@@ -146,9 +189,6 @@ class StickerWindow:
         grip.bind("<B1-Motion>", self.resize_drag)
         self.bar_frames.append(grip)
         self.grip = grip
-
-        self.pin_btn = self.bar_button(self.bottom_bar, "pin", self.toggle_always_on_top)
-        self.pin_btn.pack(side=tk.RIGHT)
 
         self.style_buttons = {}
         for key, label, font_spec in (
@@ -161,57 +201,67 @@ class StickerWindow:
             btn.pack(side=tk.LEFT)
             self.style_buttons[key] = btn
 
-    def build_panel(self):
-        self.panel = tk.Frame(self.window, highlightthickness=0)
+        self.bar_button(self.bottom_bar, "•", self.toggle_bullet, ("Segoe UI", 10, "bold")).pack(side=tk.LEFT)
+        self.family_btn = self.bar_button(self.bottom_bar, "Aa", self.open_family_menu, ("Segoe UI", 9))
+        self.family_btn.pack(side=tk.LEFT)
+        self.size_btn = self.bar_button(self.bottom_bar, str(self.sticker_data['font_size']),
+                                        self.open_size_menu, ("Segoe UI", 9))
+        self.size_btn.pack(side=tk.LEFT)
 
-        row_bg = tk.Frame(self.panel, highlightthickness=0)
-        row_bg.pack(fill=tk.X, padx=10, pady=(6, 2))
-        self.panel_labels.append(tk.Label(row_bg, text="Bg", font=BTN_FONT))
-        self.panel_labels[-1].pack(side=tk.LEFT, padx=(0, 6))
-        for color in STICKER_COLORS:
-            tk.Button(row_bg, bg=color, activebackground=color, width=2, relief=tk.FLAT, bd=0,
-                      command=lambda c=color: self.change_bg_color(c)).pack(side=tk.LEFT, padx=1)
+        self.color_btn = make_swatch(self.bottom_bar, self.sticker_data['text_color'], self.toggle_palette)
+        self.color_btn.pack(side=tk.LEFT, padx=(6, 0), pady=6)
 
-        row_text = tk.Frame(self.panel, highlightthickness=0)
-        row_text.pack(fill=tk.X, padx=10, pady=2)
-        self.panel_labels.append(tk.Label(row_text, text="Text", font=BTN_FONT))
-        self.panel_labels[-1].pack(side=tk.LEFT, padx=(0, 6))
+        self.palette = tk.Frame(self.window, highlightthickness=0)
         for color in TEXT_COLORS:
-            tk.Button(row_text, bg=color, fg="white", activebackground=color, text="A", width=2,
-                      relief=tk.FLAT, bd=0, font=("Segoe UI", 8, "bold"),
-                      command=lambda c=color: self.change_text_color(c)).pack(side=tk.LEFT, padx=1)
+            make_swatch(self.palette, color, lambda c=color: self.pick_text_color(c)).pack(side=tk.LEFT, padx=3, pady=5)
 
-        row_font = tk.Frame(self.panel, highlightthickness=0)
-        row_font.pack(fill=tk.X, padx=10, pady=(2, 8))
-        self.font_var = tk.StringVar(value=f"{self.sticker_data['font_family']} {self.sticker_data['font_size']}")
-        self.font_menu = tk.OptionMenu(row_font, self.font_var, *[f"{f[0]} {f[1]}" for f in FONTS],
-                                       command=self.change_font)
-        self.font_menu.config(highlightthickness=0, bd=0, font=BTN_FONT, width=16)
-        self.font_menu.pack(side=tk.LEFT)
+    def build_bg_palette(self):
+        self.bg_palette = tk.Frame(self.window, highlightthickness=0)
+        for color in STICKER_COLORS:
+            make_swatch(self.bg_palette, color, lambda c=color: self.pick_bg_color(c)).pack(side=tk.LEFT, padx=3, pady=5)
 
-    def open_more_menu(self):
-        menu = tk.Menu(self.window, tearoff=0)
-        menu.add_command(label="Notes list", command=self.on_list_callback)
-        menu.add_command(label="Style panel", command=self.toggle_panel)
+    def popup_above_bar(self, menu, anchor, entry_count):
+        y = self.bottom_bar.winfo_rooty() - entry_count * 22 - 8
         try:
-            menu.tk_popup(self.more_x(), self.more_y())
+            menu.tk_popup(anchor.winfo_rootx(), y)
         finally:
             menu.grab_release()
 
-    def more_x(self):
-        return self.top_bar.winfo_rootx() + self.top_bar.winfo_width() // 2
+    def open_family_menu(self):
+        menu = tk.Menu(self.window, tearoff=0)
+        for name in FONT_FAMILIES:
+            menu.add_command(label=name, command=lambda n=name: self.change_font_family(n))
+        self.popup_above_bar(menu, self.family_btn, len(FONT_FAMILIES))
 
-    def more_y(self):
-        return self.top_bar.winfo_rooty() + BAR_H
+    def open_size_menu(self):
+        menu = tk.Menu(self.window, tearoff=0)
+        for size in FONT_SIZES:
+            menu.add_command(label=str(size), command=lambda s=size: self.change_font_size(s))
+        self.popup_above_bar(menu, self.size_btn, len(FONT_SIZES))
 
-    def toggle_panel(self):
-        if self.panel_shown:
-            self.panel.place_forget()
-            self.panel_shown = False
+    def toggle_bg_palette(self):
+        if self.bg_palette.winfo_ismapped():
+            self.bg_palette.place_forget()
         else:
-            self.panel.place(x=0, y=BAR_H, relwidth=1)
-            self.panel.lift()
-            self.panel_shown = True
+            self.bg_palette.place(relx=1.0, y=BAR_H, x=-6, anchor="ne")
+            self.bg_palette.lift()
+
+    def pick_bg_color(self, color):
+        self.bg_palette.place_forget()
+        self.bg_btn.configure(bg=color)
+        self.change_bg_color(color)
+
+    def toggle_palette(self):
+        if self.palette.winfo_ismapped():
+            self.palette.place_forget()
+        else:
+            self.palette.place(relx=0.5, rely=1.0, y=-BAR_H, anchor="s")
+            self.palette.lift()
+
+    def pick_text_color(self, color):
+        self.palette.place_forget()
+        self.color_btn.configure(bg=color)
+        self.change_text_color(color)
 
     def poll_hover(self):
         try:
@@ -244,6 +294,8 @@ class StickerWindow:
             return
         self.top_bar.place_forget()
         self.bottom_bar.place_forget()
+        self.palette.place_forget()
+        self.bg_palette.place_forget()
         self.bars_shown = False
 
     def start_drag(self, event):
@@ -260,6 +312,7 @@ class StickerWindow:
         w = max(MIN_W, w0 + event.x_root - x0)
         h = max(MIN_H, h0 + event.y_root - y0)
         self.window.geometry(f"{w}x{h}+{self.window.winfo_x()}+{self.window.winfo_y()}")
+        self.apply_round_corners(w, h)
         self.refresh_thumb()
 
     def on_yscroll(self, first, last):
@@ -299,12 +352,8 @@ class StickerWindow:
         for btn in self.bar_buttons:
             btn.configure(bg=bar, fg=fg, activebackground=bar_hover, activeforeground=fg)
 
-        self.panel.configure(bg=bar)
-        for label in self.panel_labels:
-            label.configure(bg=bar, fg=fg)
-        for row in self.panel.winfo_children():
-            if isinstance(row, tk.Frame):
-                row.configure(bg=bar)
+        self.palette.configure(bg=bar)
+        self.bg_palette.configure(bg=bar)
 
     def apply_format(self):
         d = self.sticker_data
@@ -352,10 +401,53 @@ class StickerWindow:
             self.refresh_fonts(start, end)
         self.schedule_save()
 
+    def toggle_bullet(self):
+        t = self.text_widget
+        sel = t.tag_ranges("sel")
+        if sel:
+            first_line = int(str(sel[0]).split('.')[0])
+            last_line = int(str(sel[1]).split('.')[0])
+        else:
+            first_line = last_line = int(t.index("insert").split('.')[0])
+        lines = range(first_line, last_line + 1)
+        all_bulleted = all(t.get(f"{n}.0", f"{n}.0+2c") == BULLET for n in lines)
+        for n in lines:
+            start = f"{n}.0"
+            if all_bulleted:
+                t.delete(start, f"{start}+2c")
+            else:
+                t.insert(start, BULLET)
+        self.schedule_save()
+
+    def on_return(self, event):
+        t = self.text_widget
+        line_start = t.index("insert linestart")
+        line_text = t.get(line_start, "insert lineend")
+        if not line_text.startswith(BULLET):
+            return None
+        if line_text.strip() == BULLET.strip():
+            t.delete(line_start, f"{line_start}+2c")
+            return None
+        t.insert("insert", "\n" + BULLET)
+        return "break"
+
+    def color_tag(self, color):
+        name = "c_" + color[1:]
+        self.text_widget.tag_configure(name, foreground=color)
+        return name
+
+    def apply_text_color(self, color, start, end):
+        t = self.text_widget
+        for other in TEXT_COLORS:
+            t.tag_remove(self.color_tag(other), start, end)
+        t.tag_add(self.color_tag(color), start, end)
+        self.schedule_save()
+
     def collect_styles(self):
         t = self.text_widget
         styles = []
-        for marker in MARKERS:
+        color_names = [self.color_tag(c) for c in TEXT_COLORS]
+        for marker in list(MARKERS) + color_names:
             ranges = t.tag_ranges(marker)
             for i in range(0, len(ranges), 2):
                 styles.append({
@@ -372,8 +464,12 @@ class StickerWindow:
     def load_styles(self):
         t = self.text_widget
         for style in self.sticker_data.get('styles', []):
-            if style['tag'] in MARKERS:
-                t.tag_add(style['tag'], f"1.0+{style['start']}c", f"1.0+{style['end']}c")
+            tag = style['tag']
+            if tag in MARKERS:
+                t.tag_add(tag, f"1.0+{style['start']}c", f"1.0+{style['end']}c")
+            elif tag.startswith("c_") and ("#" + tag[2:]) in TEXT_COLORS:
+                self.color_tag("#" + tag[2:])
+                t.tag_add(tag, f"1.0+{style['start']}c", f"1.0+{style['end']}c")
 
     def change_bg_color(self, color):
         self.sticker_data['bg_color'] = color
@@ -381,21 +477,28 @@ class StickerWindow:
         self.schedule_save()
 
     def change_text_color(self, color):
+        sel = self.text_widget.tag_ranges("sel")
+        if sel:
+            self.apply_text_color(color, *sel)
+            return
         self.sticker_data['text_color'] = color
         self.apply_colors()
         self.schedule_save()
 
-    def change_font(self, font_str):
-        name, size = font_str.rsplit(' ', 1)
+    def change_font_family(self, name):
         self.sticker_data['font_family'] = name
-        self.sticker_data['font_size'] = int(size)
+        self.apply_format()
+        self.schedule_save()
+
+    def change_font_size(self, size):
+        self.sticker_data['font_size'] = size
+        self.size_btn.configure(text=str(size))
         self.apply_format()
         self.schedule_save()
 
     def toggle_always_on_top(self):
         self.sticker_data['always_on_top'] = not self.sticker_data.get('always_on_top', False)
         self.window.attributes('-topmost', self.sticker_data['always_on_top'])
-        self.pin_btn.configure(relief=tk.SUNKEN if self.sticker_data['always_on_top'] else tk.FLAT)
         self.schedule_save()
 
     def on_title_change(self, event):
@@ -422,6 +525,9 @@ class StickerWindow:
         menu.add_command(label="Cut", command=lambda: self.text_widget.event_generate("<<Cut>>"))
         menu.add_command(label="Copy", command=lambda: self.text_widget.event_generate("<<Copy>>"))
         menu.add_command(label="Paste", command=lambda: self.text_widget.event_generate("<<Paste>>"))
+        menu.add_separator()
+        pinned = tk.BooleanVar(value=self.sticker_data.get('always_on_top', False))
+        menu.add_checkbutton(label="Always on top", variable=pinned, command=self.toggle_always_on_top)
         try:
             menu.tk_popup(event.x_root, event.y_root)
         finally:
